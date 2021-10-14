@@ -44,7 +44,16 @@ void setDataDirection(uint8_t direction){
 }
 
 void setAddressCounter(uint8_t address){
-	
+	PORT_RS &= ~(1 << PNUM_RS);
+	PORT_RW &= ~(1 << PNUM_RW);
+	writeToPorts(address);
+	PORT_D7 |= (1 << PNUM_D7); //Overwrite D7 to high to write ddram address
+	toggleEnable();
+	switch(DATABUS_SIZE){
+		case 4:
+			writeToPorts(address << 4);
+			toggleEnable();	
+	}
 }
 
 uint8_t getAddressDDRAM(){
@@ -71,31 +80,22 @@ uint8_t getAddressDDRAM(){
 			address += (((PORT_D5 & (1 << PNUM_D5)) >> PNUM_D5) << 1);
 			address += (((PORT_D4 & (1 << PNUM_D4)) >> PNUM_D4));
 	}
-	//Need to shift this to 8bit only. Need to read D7-4 again for 4bit
 	PORT_EN &= ~(1 << PNUM_EN);
 	setDataDirection('o');
 	return address;
 }
 
 void writeToPorts(const uint8_t data){
-	PORT_D7 |= (((data & 0x80) >> 7) << PNUM_D7);
-	PORT_D7 &= (((data | 0x80) >> 7) << PNUM_D7);
-	PORT_D6 |= (((data & 0x40) >> 6) << PNUM_D6);
-	PORT_D6 &= (((data | 0x40) >> 6) << PNUM_D6);
-	PORT_D5 |= (((data & 0x20) >> 5) << PNUM_D5);
-	PORT_D5 &= (((data | 0x20) >> 5) << PNUM_D5);
-	PORT_D4 |= (((data & 0x10) >> 4) << PNUM_D4);
-	PORT_D4 &= (((data | 0x10) >> 4) << PNUM_D4);
+	PORT_D7 = (PORT_D7 & ~(1 << PNUM_D7)) | (((data & 0x80) >> 7) << PNUM_D7);
+	PORT_D6 = (PORT_D6 & ~(1 << PNUM_D6)) | (((data & 0x40) >> 6) << PNUM_D6);
+	PORT_D5 = (PORT_D5 & ~(1 << PNUM_D5)) | (((data & 0x20) >> 5) << PNUM_D5);
+	PORT_D4 = (PORT_D4 & ~(1 << PNUM_D4)) | (((data & 0x10) >> 4) << PNUM_D4);
 	switch(DATABUS_SIZE){
 		case 8:
-			PORT_D3 |= (((data & 0x08) >> 3) << PNUM_D3);
-			PORT_D3 &= (((data | 0x08) >> 3) << PNUM_D3);
-			PORT_D2 |= (((data & 0x04) >> 2) << PNUM_D2);
-			PORT_D2 &= (((data | 0x04) >> 2) << PNUM_D2);
-			PORT_D1 |= (((data & 0x02) >> 1) << PNUM_D1);
-			PORT_D1 &= (((data | 0x02) >> 1) << PNUM_D1);
-			PORT_D0 |= ((data & 0x01) << PNUM_D0);
-			PORT_D0 &= ((data | 0x01) << PNUM_D0);
+			PORT_D3 = (PORT_D3 & ~(1 << PNUM_D3)) | (((data & 0x08) >> 3) << PNUM_D3);
+			PORT_D2 = (PORT_D2 & ~(1 << PNUM_D2)) | (((data & 0x04) >> 2) << PNUM_D2);
+			PORT_D1 = (PORT_D1 & ~(1 << PNUM_D1)) | (((data & 0x02) >> 1) << PNUM_D1);
+			PORT_D0 = (PORT_D0 & ~(1 << PNUM_D0)) | ((data & 0x01) << PNUM_D0);
 	}
 }
 
@@ -122,25 +122,31 @@ void enterCommand(const uint8_t cmd){
 void enterLetter(const uint8_t letter){ //NB: LCD interprets ASCII
 	while(isBusy()){};
 	if(letter == 0x7F){ //Del code. Backspace on this laptop is mapped to del
-		uint8_t address;
-		//Turn cursor off. 
-		enterCommand(0x0C);
-		//Read DDRAM Address.
-		address = getAddressDDRAM();
-		//TODO: Set current address to current - 0x01.
-		//Set to blank
-		//Set current address to current - 0x01
-		//Turn cursor back on
+			uint8_t address;
+			//Turn cursor off. 
+			enterCommand(0x0C);
+			//Read DDRAM Address.
+			address = getAddressDDRAM();
+			//TODO: Set current address to current - 0x01.
+			setAddressCounter(address - 1); //TODO: Account for 2 line mode with disjoint mem locations
+			//Set to blank
+			enterLetter(0x20); //Blank character
+			//Set current address to current - 0x01
+			setAddressCounter(address - 1);
+			//Turn cursor back on
+			enterCommand(0x0E);
 	}
-	writeToPorts(letter);
-	PORT_RS |= (1 << PNUM_RS);
-	PORT_RW &= ~(1 << PNUM_RW);
-	toggleEnable();
-	switch(DATABUS_SIZE){
-		case 4: //Need to upgrade the lower nibble to upper position and send
-			writeToPorts(letter << 4);
-			toggleEnable();
-			break;
+	else{
+		writeToPorts(letter);
+		PORT_RS |= (1 << PNUM_RS);
+		PORT_RW &= ~(1 << PNUM_RW);
+		toggleEnable();
+		switch(DATABUS_SIZE){
+			case 4: //Need to upgrade the lower nibble to upper position and send
+				writeToPorts(letter << 4);
+				toggleEnable();
+				break;
+		}
 	}
 	
 }
