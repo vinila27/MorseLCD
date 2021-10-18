@@ -19,8 +19,23 @@ int main(void)
 	//enterString((const uint8_t*)"Inverse square matrix");
 	//enterLetter('H');
 	uint8_t rxData;
+	uint8_t address;
     while(1){
 		rxData = receiveUART();
 		enterLetter(rxData);
+		address = getAddressDDRAM();
+		// Need to cast address to a hex code
+		transmitUART('0'); 
+		transmitUART('b');
+		for(int i = 7; i >= 0; i--){
+			if((address & (1 << i)) >> i){
+				transmitUART('1');
+			}
+			else{
+				transmitUART('0');
+			}
+		}
+		transmitUART('\r');
+		transmitUART('\n');
     }
 }

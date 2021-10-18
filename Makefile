@@ -2,7 +2,7 @@ CC = avr-gcc
 objcopy = avr-objcopy
 name = test
 objects = main.o lcd.o comm.o 
-CFLAGS = -Os -mmcu=atmega328p -std=c99
+CFLAGS = -Os -mmcu=atmega328p -std=c99 -Wall
 PORT = COM3
 BAUD = 115200
 
@@ -12,7 +12,7 @@ $(name).hex: $(name).elf
 $(name).elf: $(objects)
 	$(CC) -o $@ $^
 
-install: $(name).hex
+upload: $(name).hex
 	avrdude -v -c arduino -p atmega328p -P $(PORT) -b $(BAUD) -U flash:w:$<
 
 clean: 

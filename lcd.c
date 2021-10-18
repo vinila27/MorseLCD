@@ -25,8 +25,9 @@ void setDataDirection(uint8_t direction){
 				DDR_D2 &= ~(1 << PNUM_D2);
 				DDR_D1 &= ~(1 << PNUM_D1);
 				DDR_D0 &= ~(1 << PNUM_D0);
+				break;
 			}
-	
+			break;
 		case 'o':
 			DDR_D7 |= (1 << PNUM_D7);
 			DDR_D6 |= (1 << PNUM_D6);
@@ -38,7 +39,9 @@ void setDataDirection(uint8_t direction){
 				DDR_D2 |= (1 << PNUM_D2);
 				DDR_D1 |= (1 << PNUM_D1);
 				DDR_D0 |= (1 << PNUM_D0);
+				break;
 			}
+			break;
 	}
 	
 }
@@ -53,6 +56,7 @@ void setAddressCounter(uint8_t address){
 		case 4:
 			writeToPorts(address << 4);
 			toggleEnable();	
+			break;
 	}
 }
 
@@ -62,23 +66,25 @@ uint8_t getAddressDDRAM(){
 	PORT_RS &= ~(1 << PNUM_RS);
 	PORT_RW |= (1 << PNUM_RW);
 	PORT_EN |= (1 << PNUM_EN);
-	address += (((PORT_D6 & (1 << PNUM_D6)) >> PNUM_D6) << 6);
-	address += (((PORT_D5 & (1 << PNUM_D5)) >> PNUM_D5) << 5);
-	address += (((PORT_D4 & (1 << PNUM_D4)) >> PNUM_D4) >> 4);
+	address += (((PIN_D6 & (1 << PNUM_D6)) >> PNUM_D6) << 6);
+	address += (((PIN_D5 & (1 << PNUM_D5)) >> PNUM_D5) << 5);
+	address += (((PIN_D4 & (1 << PNUM_D4)) >> PNUM_D4) << 4);
 	switch(DATABUS_SIZE){
 		case 8:
-			address += (((PORT_D3 & (1 << PNUM_D3)) >> PNUM_D3) << 3);
-			address += (((PORT_D2 & (1 << PNUM_D2)) >> PNUM_D2) << 2);
-			address += (((PORT_D1 & (1 << PNUM_D1)) >> PNUM_D1) >> 1);
-			address += (((PORT_D0 & (1 << PNUM_D0)) >> PNUM_D0));
+			address += (((PIN_D3 & (1 << PNUM_D3)) >> PNUM_D3) << 3);
+			address += (((PIN_D2 & (1 << PNUM_D2)) >> PNUM_D2) << 2);
+			address += (((PIN_D1 & (1 << PNUM_D1)) >> PNUM_D1) << 1);
+			address += (((PIN_D0 & (1 << PNUM_D0)) >> PNUM_D0));
+			break;
 		case 4:
 			PORT_EN &= ~(1 << PNUM_EN);
 			_delay_us(1);
 			PORT_EN |= (1 << PNUM_EN);
-			address += (((PORT_D7 & (1 << PNUM_D7)) >> PNUM_D7) << 3);
-			address += (((PORT_D6 & (1 << PNUM_D6)) >> PNUM_D6) << 2);
-			address += (((PORT_D5 & (1 << PNUM_D5)) >> PNUM_D5) << 1);
-			address += (((PORT_D4 & (1 << PNUM_D4)) >> PNUM_D4));
+			address += (((PIN_D7 & (1 << PNUM_D7)) >> PNUM_D7) << 3);
+			address += (((PIN_D6 & (1 << PNUM_D6)) >> PNUM_D6) << 2);
+			address += (((PIN_D5 & (1 << PNUM_D5)) >> PNUM_D5) << 1);
+			address += (((PIN_D4 & (1 << PNUM_D4)) >> PNUM_D4));
+			break;
 	}
 	PORT_EN &= ~(1 << PNUM_EN);
 	setDataDirection('o');
@@ -96,6 +102,7 @@ void writeToPorts(const uint8_t data){
 			PORT_D2 = (PORT_D2 & ~(1 << PNUM_D2)) | (((data & 0x04) >> 2) << PNUM_D2);
 			PORT_D1 = (PORT_D1 & ~(1 << PNUM_D1)) | (((data & 0x02) >> 1) << PNUM_D1);
 			PORT_D0 = (PORT_D0 & ~(1 << PNUM_D0)) | ((data & 0x01) << PNUM_D0);
+			break;
 	}
 }
 
@@ -124,17 +131,18 @@ void enterLetter(const uint8_t letter){ //NB: LCD interprets ASCII
 	if(letter == 0x7F){ //Del code. Backspace on this laptop is mapped to del
 			uint8_t address;
 			//Turn cursor off. 
-			enterCommand(0x0C);
+			//enterCommand(0x0C);
 			//Read DDRAM Address.
 			address = getAddressDDRAM();
-			//TODO: Set current address to current - 0x01.
-			setAddressCounter(address - 1); //TODO: Account for 2 line mode with disjoint mem locations
+			enterLetter(address);
+			//Set current address to current - 0x01.
+			//setAddressCounter(address - 1); //TODO: Account for 2 line mode with disjoint mem locations
 			//Set to blank
-			enterLetter(0x20); //Blank character
+			//enterLetter(0x20); //Blank character
 			//Set current address to current - 0x01
-			setAddressCounter(address - 1);
+			//setAddressCounter(address - 1);
 			//Turn cursor back on
-			enterCommand(0x0E);
+			//enterCommand(0x0E);
 	}
 	else{
 		writeToPorts(letter);
@@ -199,12 +207,13 @@ void initialiseLCD(){
 			break;	
 	}
 }
+//Busy flag not working correctly at the moment
 uint8_t isBusy(){
 	uint8_t flag = 1;
 	PORT_RW |= (1 << PNUM_RW);
 	PORT_RS &= ~(1 << PNUM_RS);
 	PORT_EN &= ~(1 << PNUM_EN);
-	//Switch Data Bus to input to read the busy flag on D7
+	//Switch DDR's to inputs to read the busy flag
 	setDataDirection('i');
 	PORT_EN |= (1 << PNUM_EN);
 	_delay_us(1);
@@ -213,10 +222,11 @@ uint8_t isBusy(){
 	_delay_us(100);
 	switch(DATABUS_SIZE){
 		case 4: //Need to toggle a second time in 4bit mode as you need to carry out the full 8bit read
-			_delay_us(1);
 			toggleEnable();
+			break;
 	}
-	//Return PORTB and PORTD to outputs
+	//Return DDR's to outputs
 	setDataDirection('o');
-	return flag;
+	//return flag;
+	return 0;
 }

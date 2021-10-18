@@ -35,6 +35,15 @@
 #define PORT_D5 PORTD
 #define PORT_D6 PORTD
 #define PORT_D7 PORTD
+//Pin/Input Registers. Change PINx based on which registers each data line is connected to.
+#define PIN_D0 PINB
+#define PIN_D1 PINB
+#define PIN_D2 PINB
+#define PIN_D3 PINB
+#define PIN_D4 PIND
+#define PIN_D5 PIND
+#define PIN_D6 PIND
+#define PIN_D7 PIND
 //Port Number. Please enter which number on it's respective port each line is connected to. 
 #define PNUM_RS 0
 #define PNUM_RW 1
