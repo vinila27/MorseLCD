@@ -135,15 +135,14 @@ void enterLetter(const uint8_t letter){ //NB: LCD interprets ASCII
 			//enterCommand(0x0C);
 			//Read DDRAM Address.
 			address = getAddressDDRAM();
-			enterLetter(address);
 			//Set current address to current - 0x01.
-			//setAddressCounter(address - 1); //TODO: Account for 2 line mode with disjoint mem locations
+			setAddressCounter(address - 1); //TODO: Account for 2 line mode with disjoint mem locations
 			//Set to blank
-			//enterLetter(0x20); //Blank character
+			enterLetter(0x20); //Blank character
 			//Set current address to current - 0x01
-			//setAddressCounter(address - 1);
+			setAddressCounter(address - 1);
 			//Turn cursor back on
-			//enterCommand(0x0E);
+			enterCommand(0x0E);
 	}
 	else{
 		writeToPorts(letter);
@@ -168,11 +167,9 @@ void initialiseLCD(){
 	DDR_RS |= (1 << PNUM_RS);
 	DDR_RW |= (1 << PNUM_RW);
 	DDR_EN |= (1 << PNUM_EN);
-	switch(DATABUS_SIZE){
-		//8Bit Initialisation
+	switch(DATABUS_SIZE){ //4 and 8bit bus mode initialisation according to lcd datasheet
 		case 8:
 			setDataDirection('o');
-			//Instructions according to data sheet
 			_delay_ms(1000);
 			enterCommand(OPERATE_8BIT_2LINES);
 			_delay_ms(4.1);
@@ -187,8 +184,7 @@ void initialiseLCD(){
 			enterCommand(DISPLAY_ON_CURSOR_ON);	
 			initialised = 1;
 			break;
-			
-		//4Bit Initialisation
+		
 		case 4: //Fix up the enterCommand
 			setDataDirection('o');
 			_delay_ms(1000);
@@ -218,7 +214,7 @@ uint8_t isBusy(){
 	setDataDirection('i');
 	PORT_EN |= (1 << PNUM_EN);
 	_delay_us(1); //Need to wait 160ns (t_DDR pg52) before reading data
-	flag = ((PORT_D7 & (1 << PNUM_D7)) >> PNUM_D7);
+	flag = ((PIN_D7 & (1 << PNUM_D7)) >> PNUM_D7);
 	PORT_EN &= ~(1 << PNUM_EN);
 	switch(DATABUS_SIZE){
 		case 4: //Need to toggle a second time in 4bit mode as you need to carry out the full 8bit read

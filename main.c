@@ -3,8 +3,7 @@
 //Note to User: Please modify the userconfig.h file to fit your setup before operating.
 
 /*Current Bugs:
-	- LCD::isBusy() not working properly in 4bit mode. For some reason when trying to read the busyflag from the LCD, it just reads the previously
-	  sent value in DB7
+	- LCD::isBusy() and LCD::writeToPorts not working properly in 4bit mode.
 	- Setting the UBBR register isn't working quite right. Hardcoded atm. Figure out, then consider the possibility of including a prescaler factor?
 	- 
  TODO:
