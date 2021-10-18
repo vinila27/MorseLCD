@@ -1,0 +1,9 @@
+/*switch statements require breaks at the end of each case or else subsequent cases will
+  be exectuted regardless of whether the case matches the statement.*/
+/*PORTx cannot be used interchangably with PINx. PORTx is the output buffer and stores the
+  last set values of each pin. PINx is the input buffer and stores the last received values 
+  of each pin.*/
+/*Read your timing characteristic charts, e.g. When reading, you need to wait at least 160ns
+  after raising the enable pin before the LCD switches registers. In general, not all your 
+  memory elements in your system can be accessed at the same rate. Keep this in mind.*/
+  

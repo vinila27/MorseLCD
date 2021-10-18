@@ -6,6 +6,7 @@
 	- LCD::isBusy() not working properly in 4bit mode. For some reason when trying to read the busyflag from the LCD, it just reads the previously
 	  sent value in DB7
 	- Setting the UBBR register isn't working quite right. Hardcoded atm. Figure out, then consider the possibility of including a prescaler factor?
+	- 
  TODO:
 	- LCD::clearScreen()
 	- LCD::nextLine()

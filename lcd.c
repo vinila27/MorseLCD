@@ -66,6 +66,7 @@ uint8_t getAddressDDRAM(){
 	PORT_RS &= ~(1 << PNUM_RS);
 	PORT_RW |= (1 << PNUM_RW);
 	PORT_EN |= (1 << PNUM_EN);
+	_delay_us(1); // Need to wait 160ns before reading data 
 	address += (((PIN_D6 & (1 << PNUM_D6)) >> PNUM_D6) << 6);
 	address += (((PIN_D5 & (1 << PNUM_D5)) >> PNUM_D5) << 5);
 	address += (((PIN_D4 & (1 << PNUM_D4)) >> PNUM_D4) << 4);
@@ -216,10 +217,9 @@ uint8_t isBusy(){
 	//Switch DDR's to inputs to read the busy flag
 	setDataDirection('i');
 	PORT_EN |= (1 << PNUM_EN);
-	_delay_us(1);
+	_delay_us(1); //Need to wait 160ns (t_DDR pg52) before reading data
 	flag = ((PORT_D7 & (1 << PNUM_D7)) >> PNUM_D7);
 	PORT_EN &= ~(1 << PNUM_EN);
-	_delay_us(100);
 	switch(DATABUS_SIZE){
 		case 4: //Need to toggle a second time in 4bit mode as you need to carry out the full 8bit read
 			toggleEnable();
@@ -227,6 +227,5 @@ uint8_t isBusy(){
 	}
 	//Return DDR's to outputs
 	setDataDirection('o');
-	//return flag;
-	return 0;
+	return flag;
 }
