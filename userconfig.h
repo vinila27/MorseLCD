@@ -5,7 +5,7 @@
 //If using 4-Bit mode, you only need to change the direction and port registers suffixed with _D4,_D5,_D6, and _D7. _D0-3 can be left as is
 
 //Data bus Size. Options: 4 or 8
-#define DATABUS_SIZE 8
+#define DATABUS_SIZE 4
 //uC CPU
 #define F_CPU 16000000
 //Baud rate for UART Serial

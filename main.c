@@ -9,7 +9,6 @@
  TODO:
 	- LCD::clearScreen()
 	- LCD::nextLine()
-	- LCD::backSpace() ascii 0x08 currently shows a character. Can we delete most recent entry in DRAM
 */
 
 int main(void)

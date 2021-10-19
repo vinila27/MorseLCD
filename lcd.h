@@ -20,8 +20,8 @@
 
 //LCD Methods
 void toggleEnable();
-void setDataDirection(uint8_t direction); //arg direction can be 'i' or 'o' depending on whether the bus is being configured as input or output
-void setAddressCounter(uint8_t address);
+void setBusDirection(const uint8_t direction); //arg direction can be 'i' or 'o' depending on whether the bus is being configured as input or output
+void setAddressCounter(const uint8_t address);
 uint8_t getAddressDDRAM();
 void writeToPorts(const uint8_t data);
 void enterCommand(const uint8_t cmd);

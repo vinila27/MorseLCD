@@ -12,7 +12,7 @@ void toggleEnable(){
 	_delay_us(100);
 }
 
-void setDataDirection(uint8_t direction){
+void setBusDirection(const uint8_t direction){
 	switch(direction){
 		case 'i':
 			DDR_D7 &= ~(1 << PNUM_D7);
@@ -46,7 +46,7 @@ void setDataDirection(uint8_t direction){
 	
 }
 
-void setAddressCounter(uint8_t address){
+void setAddressCounter(const uint8_t address){
 	PORT_RS &= ~(1 << PNUM_RS);
 	PORT_RW &= ~(1 << PNUM_RW);
 	writeToPorts(address);
@@ -62,7 +62,7 @@ void setAddressCounter(uint8_t address){
 
 uint8_t getAddressDDRAM(){
 	uint8_t address = 0;
-	setDataDirection('i');
+	setBusDirection('i');
 	PORT_RS &= ~(1 << PNUM_RS);
 	PORT_RW |= (1 << PNUM_RW);
 	PORT_EN |= (1 << PNUM_EN);
@@ -81,6 +81,7 @@ uint8_t getAddressDDRAM(){
 			PORT_EN &= ~(1 << PNUM_EN);
 			_delay_us(1);
 			PORT_EN |= (1 << PNUM_EN);
+			_delay_us(1);
 			address += (((PIN_D7 & (1 << PNUM_D7)) >> PNUM_D7) << 3);
 			address += (((PIN_D6 & (1 << PNUM_D6)) >> PNUM_D6) << 2);
 			address += (((PIN_D5 & (1 << PNUM_D5)) >> PNUM_D5) << 1);
@@ -88,7 +89,7 @@ uint8_t getAddressDDRAM(){
 			break;
 	}
 	PORT_EN &= ~(1 << PNUM_EN);
-	setDataDirection('o');
+	setBusDirection('o');
 	return address;
 }
 
@@ -131,18 +132,16 @@ void enterLetter(const uint8_t letter){ //NB: LCD interprets ASCII
 	while(isBusy()){};
 	if(letter == 0x7F){ //Del code. Backspace on this laptop is mapped to del
 			uint8_t address;
-			//Turn cursor off. 
-			//enterCommand(0x0C);
-			//Read DDRAM Address.
 			address = getAddressDDRAM();
-			//Set current address to current - 0x01.
+			if(address == 0x00){
+				return;
+			}
 			setAddressCounter(address - 1); //TODO: Account for 2 line mode with disjoint mem locations
-			//Set to blank
 			enterLetter(0x20); //Blank character
-			//Set current address to current - 0x01
 			setAddressCounter(address - 1);
-			//Turn cursor back on
-			enterCommand(0x0E);
+	}
+	else if(letter == 0x0A){ //enter key
+		setAddressCounter(0x40);
 	}
 	else{
 		writeToPorts(letter);
@@ -169,7 +168,7 @@ void initialiseLCD(){
 	DDR_EN |= (1 << PNUM_EN);
 	switch(DATABUS_SIZE){ //4 and 8bit bus mode initialisation according to lcd datasheet
 		case 8:
-			setDataDirection('o');
+			setBusDirection('o');
 			_delay_ms(1000);
 			enterCommand(OPERATE_8BIT_2LINES);
 			_delay_ms(4.1);
@@ -186,20 +185,25 @@ void initialiseLCD(){
 			break;
 		
 		case 4: //Fix up the enterCommand
-			setDataDirection('o');
+			setBusDirection('o');
 			_delay_ms(1000);
 			enterCommand(0x33);
 			timeSensitive = 0;
-			_delay_us(100);
+			//_delay_us(2000);
 			enterCommand(0x32);
+			//_delay_us(2000);
 			enterCommand(0x28);
+			//_delay_us(2000);
 			enterCommand(0x08);
+			//_delay_us(2000);
 			enterCommand(0x01);
-			_delay_ms(2);
+			//_delay_ms(2);
 			enterCommand(0x06);
+			//_delay_us(2000);
 			//TODO: Include the last command about the cursor
 			enterCommand(0x0E);
-			enterCommand(0x06);
+			/*_delay_us(2000);
+			enterCommand(0x06);*/
 			initialised = 1;
 			break;	
 	}
@@ -210,8 +214,7 @@ uint8_t isBusy(){
 	PORT_RW |= (1 << PNUM_RW);
 	PORT_RS &= ~(1 << PNUM_RS);
 	PORT_EN &= ~(1 << PNUM_EN);
-	//Switch DDR's to inputs to read the busy flag
-	setDataDirection('i');
+	setBusDirection('i');
 	PORT_EN |= (1 << PNUM_EN);
 	_delay_us(1); //Need to wait 160ns (t_DDR pg52) before reading data
 	flag = ((PIN_D7 & (1 << PNUM_D7)) >> PNUM_D7);
@@ -221,7 +224,6 @@ uint8_t isBusy(){
 			toggleEnable();
 			break;
 	}
-	//Return DDR's to outputs
-	setDataDirection('o');
+	setBusDirection('o');
 	return flag;
 }
