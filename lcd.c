@@ -140,7 +140,7 @@ void enterLetter(const uint8_t letter){ //NB: LCD interprets ASCII
 			enterLetter(0x20); //Blank character
 			setAddressCounter(address - 1);
 	}
-	else if(letter == 0x0A){ //enter key
+	else if(letter == 0x0D){ //enter key
 		setAddressCounter(0x40);
 	}
 	else{

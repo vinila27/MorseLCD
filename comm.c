@@ -1,9 +1,10 @@
 #include "comm.h"
 
 void initialiseUART(){
-	CLKPR &= ~((1 << CLKPS3)|(1 << CLKPS2)|(1 << CLKPS1)|(1 <<CLKPS0)); //Set clock prescaler to 1. Can change later. Just want to secure CLK freq
+	//CLKPR = 0x80; //Need to set MSB to high, and all other bits to low to set the prescaler
+	//CLKPR &= ~((1 << CLKPS3)|(1 << CLKPS2)|(1 << CLKPS1)|(1 <<CLKPS0)); //Set clock prescaler to 1. Can change later. Just want to secure CLK freq
 	UBRR0H = 1;//(uint8_t)((VAL_UBBR) >> 8);
-	UBRR0L = 159;//(uint8_t)VAL_UBBR;
+	UBRR0L = 160;//(uint8_t)VAL_UBBR;
 	UCSR0B |= ((1 << RXEN0)|(1 << TXEN0));
 	UCSR0B &= ~(1 << UCSZ02);
 	UCSR0C |= ((1 << UCSZ01)|(1 << UCSZ00));

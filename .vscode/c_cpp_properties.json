@@ -1,17 +1,16 @@
 {
     "configurations": [
         {
-            "name": "Win32",
+            "name": "Linux",
             "includePath": [
-                "${default}",
-                "C:\\Program Files (x86)\\Arduino\\**"
+                "${workspaceFolder}/**",
+                "/usr/lib/avr/include/"
             ],
-            "compilerPath": "C:\\Program Files\\mingw-w64\\x86_64-8.1.0-posix-seh-rt_v6-rev0\\mingw64\\bin\\gcc.exe",
+            "defines": ["__AVR_ATmega328P__"],
+            "compilerPath": "/usr/bin/gcc",
             "cStandard": "gnu17",
             "cppStandard": "gnu++14",
-            "defines": ["__AVR_ATmega328P__"
-            ],
-            "intelliSenseMode": "windows-gcc-x64"
+            "intelliSenseMode": "linux-gcc-x64"
         }
     ],
     "version": 4
