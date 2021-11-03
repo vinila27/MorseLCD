@@ -1,6 +1,8 @@
 {
     "files.associations": {
         "delay.h": "c",
-        "comm.h": "c"
+        "comm.h": "c",
+        "userconfig.h": "c",
+        "stdint.h": "c"
     }
 }

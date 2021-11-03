@@ -6,10 +6,11 @@
 
 //Data bus Size. Options: 4 or 8
 #define DATABUS_SIZE 4
-//uC CPU
+//uC CPU frequency
 #define F_CPU 16000000
-//Baud rate for UART Serial
+//Baud rate for UART Serial Transmission
 #define BAUD 2400
+
 
 //Direction Registers. Change DDRx based on which register each data line is connected to.
 #define DDR_RS DDRC
