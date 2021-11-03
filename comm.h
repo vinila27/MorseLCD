@@ -1,6 +1,7 @@
 #ifndef COMM_H
 #define COMM_H
 
+#include <stdint.h>
 #include <avr/io.h>
 #include "userconfig.h"
 

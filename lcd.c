@@ -3,6 +3,7 @@
 volatile uint8_t initialised = 0; //LCD Busy flag can only be checked after intialised. This flag indicates when this is so.
 volatile uint8_t timeSensitive = 1; //flag used when initialising 4-bit bus. Required to ensure correct timing for first step.
 
+//Toggles the Enable pin which is required for sending commands to the LCD
 void toggleEnable(){
 	PORT_EN &= ~(1 << PNUM_EN);
 	_delay_us(1);
@@ -11,7 +12,7 @@ void toggleEnable(){
 	PORT_EN &= ~(1 << PNUM_EN);
 	_delay_us(100);
 }
-
+//Sets the Databus to either input or output mode depending on 'direction' variable being 'i' or 'o'
 void setBusDirection(const uint8_t direction){
 	switch(direction){
 		case 'i':
@@ -46,6 +47,7 @@ void setBusDirection(const uint8_t direction){
 	
 }
 
+//Used to change the address counter for DDRAM if you wish to write at particular location on LCD (pg 29 of datasheet)
 void setAddressCounter(const uint8_t address){
 	PORT_RS &= ~(1 << PNUM_RS);
 	PORT_RW &= ~(1 << PNUM_RW);
@@ -60,6 +62,7 @@ void setAddressCounter(const uint8_t address){
 	}
 }
 
+//Used to read the DDRAM address counter (pg 29 of datasheet)
 uint8_t getAddressDDRAM(){
 	uint8_t address = 0;
 	setBusDirection('i');
@@ -93,6 +96,7 @@ uint8_t getAddressDDRAM(){
 	return address;
 }
 
+//Used to write data to the mcu databus output registers
 void writeToPorts(const uint8_t data){
 	PORT_D7 = (PORT_D7 & ~(1 << PNUM_D7)) | (((data & 0x80) >> 7) << PNUM_D7);
 	PORT_D6 = (PORT_D6 & ~(1 << PNUM_D6)) | (((data & 0x40) >> 6) << PNUM_D6);
@@ -108,7 +112,7 @@ void writeToPorts(const uint8_t data){
 	}
 }
 
-
+//Used to tinker with LCD settings (i.e. Both RW and RS pins set low). See pg 24 of Datasheet.
 void enterCommand(const uint8_t cmd){
 	if(initialised){
 		while(isBusy());
@@ -127,8 +131,8 @@ void enterCommand(const uint8_t cmd){
 			break;
 	}
 }
-
-void enterLetter(const uint8_t letter){ //NB: LCD interprets ASCII
+//Accepts ASCII 'letter' input and writes to LCD DDRAM
+void enterLetter(const uint8_t letter){
 	while(isBusy()){};
 	if(letter == 0x7F){ //Del code. Backspace on this laptop is mapped to del
 			uint8_t address;
@@ -143,13 +147,13 @@ void enterLetter(const uint8_t letter){ //NB: LCD interprets ASCII
 	else if(letter == 0x0D){ //enter key
 		setAddressCounter(0x40);
 	}
-	else{
+	else{ //normal letters + some other irrelevant characters
 		writeToPorts(letter);
 		PORT_RS |= (1 << PNUM_RS);
 		PORT_RW &= ~(1 << PNUM_RW);
 		toggleEnable();
 		switch(DATABUS_SIZE){
-			case 4: //Need to upgrade the lower nibble to upper position and send
+			case 4: //Upgrade the lower nibble to upper position and send
 				writeToPorts(letter << 4);
 				toggleEnable();
 				break;
@@ -157,17 +161,19 @@ void enterLetter(const uint8_t letter){ //NB: LCD interprets ASCII
 	}
 	
 }
+
 void enterString(const uint8_t string[]){
 	for(int i = 0; string[i] != '\0'; i++){
 		enterLetter(string[i]);
 	}
 }
+//Steps needed to initialise 4 and 8bit mode data transfer between uC and LCD according to datasheet
 void initialiseLCD(){
 	DDR_RS |= (1 << PNUM_RS);
 	DDR_RW |= (1 << PNUM_RW);
 	DDR_EN |= (1 << PNUM_EN);
-	switch(DATABUS_SIZE){ //4 and 8bit bus mode initialisation according to lcd datasheet
-		case 8:
+	switch(DATABUS_SIZE){ 
+		case 8: //pg 45, Figure 23 of Datasheet
 			setBusDirection('o');
 			_delay_ms(1000);
 			enterCommand(OPERATE_8BIT_2LINES);
@@ -184,31 +190,23 @@ void initialiseLCD(){
 			initialised = 1;
 			break;
 		
-		case 4: //Fix up the enterCommand
+		case 4: //pg 46, Figure 24 of Datasheet
 			setBusDirection('o');
 			_delay_ms(1000);
-			enterCommand(0x33);
+			enterCommand(0x33); //Haven't introduced a define for 0x33 and 0x32 as they are different in 8 and 4bit mode
 			timeSensitive = 0;
-			//_delay_us(2000);
 			enterCommand(0x32);
-			//_delay_us(2000);
-			enterCommand(0x28);
-			//_delay_us(2000);
-			enterCommand(0x08);
-			//_delay_us(2000);
-			enterCommand(0x01);
-			//_delay_ms(2);
-			enterCommand(0x06);
-			//_delay_us(2000);
-			//TODO: Include the last command about the cursor
-			enterCommand(0x0E);
-			/*_delay_us(2000);
-			enterCommand(0x06);*/
+			enterCommand(OPERATE_4BIT_2LINES);
+			enterCommand(DISPLAY_OFF);
+			enterCommand(CLEAR_DISP);
+			_delay_ms(2);
+			enterCommand(NOSHIFT_DISPLAY);
+			enterCommand(DISPLAY_ON_CURSOR_ON);
 			initialised = 1;
 			break;	
 	}
 }
-//Busy flag not working correctly at the moment
+//Check the status of the LCD Busy flag to see if it is ready to take instructions
 uint8_t isBusy(){
 	uint8_t flag = 1;
 	PORT_RW |= (1 << PNUM_RW);
@@ -216,11 +214,11 @@ uint8_t isBusy(){
 	PORT_EN &= ~(1 << PNUM_EN);
 	setBusDirection('i');
 	PORT_EN |= (1 << PNUM_EN);
-	_delay_us(1); //Need to wait 160ns (t_DDR pg52) before reading data
+	_delay_us(1); //Need to wait 160ns (t_DDR pg 52 of datasheet) before reading data
 	flag = ((PIN_D7 & (1 << PNUM_D7)) >> PNUM_D7);
 	PORT_EN &= ~(1 << PNUM_EN);
 	switch(DATABUS_SIZE){
-		case 4: //Need to toggle a second time in 4bit mode as you need to carry out the full 8bit read
+		case 4: //Need to toggle a second time in 4bit mode as you need to carry out the full 8bit read (pg 33 of datasheet, Figure 17)
 			toggleEnable();
 			break;
 	}
