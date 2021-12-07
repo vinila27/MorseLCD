@@ -3,6 +3,7 @@
         "delay.h": "c",
         "comm.h": "c",
         "userconfig.h": "c",
-        "stdint.h": "c"
+        "stdint.h": "c",
+        "lcd.h": "c"
     }
 }
