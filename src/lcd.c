@@ -1,9 +1,10 @@
 #include "lcd.h"
 
-volatile uint8_t initialised = 0; //LCD Busy flag can only be checked after intialised. This flag indicates when this is so.
-volatile uint8_t timeSensitive = 1; //flag used when initialising 4-bit bus. Required to ensure correct timing for first step.
+static uint8_t initialised = 0; //LCD Busy flag can only be checked after intialised. This flag indicates when this is so.
+static uint8_t timeSensitive = 1; //flag used when initialising 4-bit bus. Required to ensure correct timing for first step.
 
 //Toggles the Enable pin which is required for sending commands to the LCD
+//Liberal Timing applied with respect to datasheet (pg. 52)
 void toggleEnable(){
 	PORT_EN &= ~(1 << PNUM_EN);
 	_delay_us(1);
