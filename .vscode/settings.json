@@ -4,6 +4,7 @@
         "comm.h": "c",
         "userconfig.h": "c",
         "stdint.h": "c",
-        "lcd.h": "c"
+        "lcd.h": "c",
+        "interrupt.h": "c"
     }
 }
