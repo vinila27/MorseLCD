@@ -6,6 +6,7 @@
 #define T_ITERATIONS (uint16_t) T_TIMEOUT/33UL //Number of overflow iterations before T_TIMEOUT is reached
 
 #include <avr/interrupt.h>
+#include <avr/pgmspace.h> 
 #include "userconfig.h"
 
 void initialiseButton();
