@@ -1,6 +1,8 @@
 #ifndef _MAIN_
 #define _MAIN_
 
+#include "lcd.h"
+#include "comm.h"
 #include "button.h"
 
 static inline void terminalProg(){
@@ -22,12 +24,10 @@ static inline void terminalProg(){
 		}
 		transmitUART('\r');
 		transmitUART('\n');
-		
 }
 
 static inline void morseProg(){
-    //debounceButton();
     checkButton();
 }
 
-#endif
+#endif 
