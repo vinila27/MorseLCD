@@ -5,6 +5,7 @@
         "userconfig.h": "c",
         "stdint.h": "c",
         "lcd.h": "c",
-        "interrupt.h": "c"
+        "interrupt.h": "c",
+        "pgmspace.h": "c"
     }
 }
